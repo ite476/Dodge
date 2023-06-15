@@ -1,4 +1,5 @@
 using dodge_practice.Properties;
+using System;
 using System.Resources;
 
 namespace dodge_practice
@@ -10,51 +11,68 @@ namespace dodge_practice
         Player player;
         List<Bullet> bullets = new List<Bullet>();
 
-        int difficulty = 50;
+        int difficulty = 10;
+        bool difficultyRising = false;
+        bool GodMode = true;
 
         void SpawnBullet(bool isFirstTime)
         {
-
+            bullets.Add(Bullet.Spawn(panel1, player, isFirstTime));
+            panel1.Controls.Add(bullets[bullets.Count - 1]);
+            //Console.WriteLine($"{bullets[bullets.Count - 1].X}\t{bullets[bullets.Count - 1].Y}\t");
         }
         void SpawnBullet()
         {
             SpawnBullet(false);
         }
+        void SpawnBullet(string bulletType)
+        {
+            // bulletType should be "homing" here.
+            // another bulletType can be added.
+            bullets.Add(HomingBullet.Spawn(panel1, player));
+            panel1.Controls.Add(bullets[bullets.Count - 1]);
+        }
         public SpaceScreen()
         {
             InitializeComponent();
 
-            player = new Player(Width /2 , Height / 2, 1.5);
-            Bullet.MaxSpeed = 2;
+            player = new Player(Width / 2, Height / 2, 1.5);
+            Bullet.MaxSpeed = 2.5;
             for (int i = 0; i < difficulty; i++)
             {
-                bullets.Add(Bullet.Spawn(panel1, player, true));                
+                SpawnBullet(true);
             }
             panel1.Controls.Add(player);
             infoTimer.Start();
             moveTimer.Start();
             spawnTimer.Start();
         }
-
+        DateTime startTime;
+        DateTime survivedTime;
         private void infoTimer_tick(object sender, EventArgs e)
         {
-            label1.Text = "X\t" + player.X + "\t" + player.speedX_pr;
-            label2.Text = "Y\t" + player.Y + "\t" + player.speedY_pr;
+            InfoBoard.Text =
+                $"X\t{player.X}\t{player.speedX}\n" +
+                $"Y\t{player.Y}\t{player.speedY}";
             ScoreBoard.Text = "bullet\t" + bullets.Count + "\nscore\t" + Bullet.countDodge;
 
         }
         private void moveTimer_tick(object sender, EventArgs e)
         {
-            player.Fly(player.speedX_pr, player.speedY_pr);
+            player.Fly();
 
             for (int i = bullets.Count - 1; i >= 0; i--)
             {
 
-                bullets[i].Fly(bullets[i].speedX_pr, bullets[i].speedY_pr);
-                /* // Hit Calculation
-                if (bullets[i].isHitBy(player))
-                { MessageBox.Show("Hit!"); }    
-                */
+                bullets[i].Fly();
+
+                if (bullets[i].isHitBy(player) && !GodMode)
+                {
+                    moveTimer.Stop();
+                    spawnTimer.Stop();
+                    MessageBox.Show("Hit!");
+                }
+
                 if (bullets[i].isOutOf(panel1))
                 {
                     bullets[i].Dispose();
@@ -70,11 +88,17 @@ namespace dodge_practice
             Random random = new Random(DateTime.Now.Millisecond);
             while (bullets.Count < difficulty)
             {
-                bullets.Add(Bullet.Spawn(panel1, player));
+                if (bullets.Count % 2 == 0)
+                {
+                    SpawnBullet("homing");
+                    continue;
+                }
+
+                SpawnBullet();
             }
 
 
-            if ((spawnTimer.Interval > 1) && (difficulty < Bullet.countDodge))
+            if ((spawnTimer.Interval > 1) && (difficulty < Bullet.countDodge) && difficultyRising)
             {
                 difficulty++;
                 spawnTimer.Interval--;
@@ -113,23 +137,19 @@ namespace dodge_practice
 
             if (e.KeyCode == Keys.W || e.KeyCode == Keys.Up)
             {
-                player.speedY = -player.speedDefault;
-                player.speedY_pr = -player.speedPrecise;
+                player.speedY = -player.speedPrecise;
             }
             if (e.KeyCode == Keys.S || e.KeyCode == Keys.Down)
             {
-                player.speedY = player.speedDefault;
-                player.speedY_pr = player.speedPrecise;
+                player.speedY = player.speedPrecise;
             }
             if (e.KeyCode == Keys.A || e.KeyCode == Keys.Left)
             {
-                player.speedX = -player.speedDefault;
-                player.speedX_pr = -player.speedPrecise;
+                player.speedX = -player.speedPrecise;
             }
             if (e.KeyCode == Keys.D || e.KeyCode == Keys.Right)
             {
-                player.speedX = player.speedDefault;
-                player.speedX_pr = player.speedPrecise;
+                player.speedX = player.speedPrecise;
             }
         }
         private void WASD_Checker(object sender, KeyEventArgs e)
@@ -161,23 +181,19 @@ namespace dodge_practice
 
             if (e.KeyCode == Keys.W || e.KeyCode == Keys.Up)
             {
-                player.speedY = -player.speedDefault;
-                player.speedY_pr = -player.speedPrecise;
+                player.speedY = -player.speedPrecise;
             }
             if (e.KeyCode == Keys.S || e.KeyCode == Keys.Down)
             {
-                player.speedY = player.speedDefault;
-                player.speedY_pr = player.speedPrecise;
+                player.speedY = player.speedPrecise;
             }
             if (e.KeyCode == Keys.A || e.KeyCode == Keys.Left)
             {
-                player.speedX = -player.speedDefault;
-                player.speedX_pr = -player.speedPrecise;
+                player.speedX = -player.speedPrecise;
             }
             if (e.KeyCode == Keys.D || e.KeyCode == Keys.Right)
             {
-                player.speedX = player.speedDefault;
-                player.speedX_pr = player.speedPrecise;
+                player.speedX = player.speedPrecise;
             }
         }
         private void WASD_keyup(object sender, KeyEventArgs e)
@@ -187,33 +203,21 @@ namespace dodge_practice
                 case Keys.W:
                 case Keys.Up:
                     player.speedY = 0;
-                    player.speedY_pr = 0;
                     break;
                 case Keys.S:
                 case Keys.Down:
                     player.speedY = 0;
-                    player.speedY_pr = 0;
                     break;
                 case Keys.A:
                 case Keys.Left:
                     player.speedX = 0;
-                    player.speedX_pr = 0;
                     break;
                 case Keys.D:
                 case Keys.Right:
                     player.speedX = 0;
-                    player.speedX_pr = 0;
                     break;
                 default: break;
             }
-        }
-
-
-
-
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
-
         }
 
 

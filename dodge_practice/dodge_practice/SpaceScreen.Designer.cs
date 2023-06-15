@@ -33,9 +33,9 @@
             infoTimer = new System.Windows.Forms.Timer(components);
             spawnTimer = new System.Windows.Forms.Timer(components);
             panel1 = new Panel();
+            label3 = new Label();
             ScoreBoard = new Label();
-            label2 = new Label();
-            label1 = new Label();
+            InfoBoard = new Label();
             panel1.SuspendLayout();
             SuspendLayout();
             // 
@@ -57,44 +57,48 @@
             // panel1
             // 
             panel1.BackColor = Color.FromArgb(64, 64, 64);
+            panel1.Controls.Add(label3);
             panel1.Controls.Add(ScoreBoard);
-            panel1.Controls.Add(label2);
-            panel1.Controls.Add(label1);
+            panel1.Controls.Add(InfoBoard);
             panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
             panel1.Size = new Size(686, 420);
             panel1.TabIndex = 0;
             // 
+            // label3
+            // 
+            label3.Anchor = AnchorStyles.Bottom;
+            label3.AutoSize = true;
+            label3.ForeColor = Color.FromArgb(255, 192, 192);
+            label3.Location = new Point(325, 402);
+            label3.Name = "label3";
+            label3.Size = new Size(79, 14);
+            label3.TabIndex = 8;
+            label3.Text = "SurvivedTime";
+            label3.TextAlign = ContentAlignment.BottomCenter;
+            // 
             // ScoreBoard
             // 
             ScoreBoard.AutoSize = true;
+            ScoreBoard.Dock = DockStyle.Top;
             ScoreBoard.ForeColor = Color.FromArgb(255, 192, 192);
-            ScoreBoard.Location = new Point(3, 0);
+            ScoreBoard.Location = new Point(0, 0);
             ScoreBoard.Name = "ScoreBoard";
             ScoreBoard.Size = new Size(67, 14);
             ScoreBoard.TabIndex = 7;
             ScoreBoard.Text = "ScoreBoard";
             // 
-            // label2
+            // InfoBoard
             // 
-            label2.AutoSize = true;
-            label2.ForeColor = Color.FromArgb(255, 192, 192);
-            label2.Location = new Point(0, 402);
-            label2.Name = "label2";
-            label2.Size = new Size(43, 14);
-            label2.TabIndex = 5;
-            label2.Text = "Yspeed";
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.ForeColor = Color.FromArgb(255, 192, 192);
-            label1.Location = new Point(0, 388);
-            label1.Name = "label1";
-            label1.Size = new Size(43, 14);
-            label1.TabIndex = 4;
-            label1.Text = "Xspeed";
+            InfoBoard.AutoSize = true;
+            InfoBoard.Dock = DockStyle.Bottom;
+            InfoBoard.ForeColor = Color.FromArgb(255, 192, 192);
+            InfoBoard.Location = new Point(0, 406);
+            InfoBoard.Name = "InfoBoard";
+            InfoBoard.Size = new Size(61, 14);
+            InfoBoard.TabIndex = 4;
+            InfoBoard.Text = "SpeedInfo";
             // 
             // SpaceScreen
             // 
@@ -119,9 +123,9 @@
         private System.Windows.Forms.Timer infoTimer;
         private System.Windows.Forms.Timer spawnTimer;
         private Panel panel1;
-        private Label label2;
-        private Label label1;
+        private Label InfoBoard;
         private PictureBox pictureBox1;
         private Label ScoreBoard;
+        private Label label3;
     }
 }
