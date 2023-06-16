@@ -19,8 +19,8 @@ namespace dodge_practice
         ////////////////////
 
         int difficulty = 25;
-        int homingRatio = 10;
-        bool difficultyRising = false;
+        int homingRatio = 20;
+        bool difficultyRising = true;
         bool GodMode = true;
 
         //////////////////////
@@ -107,6 +107,7 @@ namespace dodge_practice
                     moveTimer.Stop();
                     difficultyTimer.Stop();
                     MessageBox.Show("Hit!");
+                    restart();
                 }
 
                 if (bullets[i].isOutOf(panel1))
@@ -119,6 +120,11 @@ namespace dodge_practice
                 InitBullets();
             }
         }
+        private void restart()
+        {
+            throw new NotImplementedException();
+        }
+
         private void difficultyTimer_tick(object sender, EventArgs e)
         {
             Random random = new Random(DateTime.Now.Millisecond);
@@ -134,118 +140,59 @@ namespace dodge_practice
         /////////////////////////////
         // Keyboard event Settings //
         /////////////////////////////
-
-        private void WASD_Checker(object sender, PreviewKeyDownEventArgs e)
+        bool[] wsadStatus = new bool[4];
+        
+        private void WASD_Checker(object sender, EventArgs ee)
         {
+            Keys detectedKey;
+            if (ee is KeyEventArgs) { detectedKey = (ee as KeyEventArgs).KeyCode; }
+            else if (ee is PreviewKeyDownEventArgs) { detectedKey = (ee as PreviewKeyDownEventArgs).KeyCode; }
+            else { return; }
 
-            /*switch (e.KeyCode)
+            if (detectedKey == Keys.W || detectedKey == Keys.Up)
             {
-                case Keys.W:
-                case Keys.Up:
-                    PlayerStatus.speedY = -PlayerStatus.speedDefault;
-                    keyPress_vert++;
-                    break;
-                case Keys.S:
-                case Keys.Down:
-                    PlayerStatus.speedY = PlayerStatus.speedDefault;
-                    keyPress_vert++;
-                    break;
-                case Keys.A:
-                case Keys.Left:
-                    PlayerStatus.speedX = -PlayerStatus.speedDefault;
-                    keyPress_horz++;
-                    break;
-                case Keys.D:
-                case Keys.Right:
-                    PlayerStatus.speedX = PlayerStatus.speedDefault;
-                    keyPress_horz++;
-                    break;
-                default: break;
-            }*/
-
-            if (e.KeyCode == Keys.W || e.KeyCode == Keys.Up)
-            {
-                player.speedY = -player.speedPrecise;
+                player.speedY = wsadStatus[1]? 0: -player.speedPrecise;
+                wsadStatus[0] = true;
             }
-            if (e.KeyCode == Keys.S || e.KeyCode == Keys.Down)
+            if (detectedKey == Keys.S || detectedKey == Keys.Down)
             {
-                player.speedY = player.speedPrecise;
+                player.speedY = wsadStatus[0] ? 0 : player.speedPrecise;
+                wsadStatus[1] = true;
             }
-            if (e.KeyCode == Keys.A || e.KeyCode == Keys.Left)
+            if (detectedKey == Keys.A || detectedKey == Keys.Left)
             {
-                player.speedX = -player.speedPrecise;
+                player.speedX = wsadStatus[3] ? 0 : -player.speedPrecise;
+                wsadStatus[2] = true;
             }
-            if (e.KeyCode == Keys.D || e.KeyCode == Keys.Right)
+            if (detectedKey == Keys.D || detectedKey == Keys.Right)
             {
-                player.speedX = player.speedPrecise;
-            }
-        }
-        private void WASD_Checker(object sender, KeyEventArgs e)
-        {
-            /*switch (e.KeyCode)
-            {
-                case Keys.W:
-                case Keys.Up:
-                    PlayerStatus.speedY = -PlayerStatus.speedDefault;
-                    keyPress_vert++;
-                    break;
-                case Keys.S:
-                case Keys.Down:
-                    PlayerStatus.speedY = PlayerStatus.speedDefault;
-                    keyPress_vert++;
-                    break;
-                case Keys.A:
-                case Keys.Left:
-                    PlayerStatus.speedX = -PlayerStatus.speedDefault;
-                    keyPress_horz++;
-                    break;
-                case Keys.D:
-                case Keys.Right:
-                    PlayerStatus.speedX = PlayerStatus.speedDefault;
-                    keyPress_horz++;
-                    break;
-                default: break;
-            }*/
-
-            if (e.KeyCode == Keys.W || e.KeyCode == Keys.Up)
-            {
-                player.speedY = -player.speedPrecise;
-            }
-            if (e.KeyCode == Keys.S || e.KeyCode == Keys.Down)
-            {
-                player.speedY = player.speedPrecise;
-            }
-            if (e.KeyCode == Keys.A || e.KeyCode == Keys.Left)
-            {
-                player.speedX = -player.speedPrecise;
-            }
-            if (e.KeyCode == Keys.D || e.KeyCode == Keys.Right)
-            {
-                player.speedX = player.speedPrecise;
+                player.speedX = wsadStatus[2] ? 0 : player.speedPrecise;
+                wsadStatus[3] = true;
             }
         }
         private void WASD_keyup(object sender, KeyEventArgs e)
         {
             switch (e.KeyCode)
             {
-                case Keys.W:
-                case Keys.Up:
-                    player.speedY = 0;
+                case Keys.W: case Keys.Up:
+                    player.speedY = wsadStatus[1]? player.speedPrecise: 0;
+                    wsadStatus[0] = false;
                     break;
-                case Keys.S:
-                case Keys.Down:
-                    player.speedY = 0;
+                case Keys.S: case Keys.Down:
+                    player.speedY = wsadStatus[0] ? -player.speedPrecise : 0;
+                    wsadStatus[1] = false;
                     break;
-                case Keys.A:
-                case Keys.Left:
-                    player.speedX = 0;
+                case Keys.A: case Keys.Left:
+                    player.speedX = wsadStatus[3] ? player.speedPrecise : 0;
+                    wsadStatus[2] = false;
                     break;
-                case Keys.D:
-                case Keys.Right:
-                    player.speedX = 0;
+                case Keys.D: case Keys.Right:
+                    player.speedX = wsadStatus[2] ? -player.speedPrecise : 0;
+                    wsadStatus[3] = false;
                     break;
                 default: break;
             }
+            
         }
 
 

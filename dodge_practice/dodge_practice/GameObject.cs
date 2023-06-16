@@ -33,7 +33,7 @@ namespace dodge_practice
         public static Size GetSize(string key) { return SizeByKey[AssetIndex[key]]; }
         public static Image GetImage(string key) {  return ImageByKey[AssetIndex[key]]; }
     }
-    public class GameObject : PictureBox
+    public abstract class GameObject : PictureBox
     {
         //////////////////////////////
         // Cordinate, Velocity Info //
@@ -327,24 +327,5 @@ namespace dodge_practice
         }
 
     }
-    
 
-    /* To do list
-
-    // 
-    //
-    // Consider if it's more efficient separate GameObject.Asset as a struct, or a ConFiguration class.
-    //
-    /// Done // Consider to make a struct holding GameObject's Cordinate related varibles.
-    /// By Comments Separation
-    //
-    // Make Replay Option 
-    // 
-    /// Done // Organize codes looks more consistent.
-    //
-    // Separate the Whole Game as a class Dodge. So that it can be run on other Windows Forms.
-    // Consider attatch other games into ONE platform. 
-    //
-    // Add 2 Players Mode
-    */
 }
