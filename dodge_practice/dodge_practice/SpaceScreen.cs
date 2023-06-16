@@ -6,49 +6,85 @@ namespace dodge_practice
 {
     public partial class SpaceScreen : Form
     {
-        Resources Resources { get { return Resources; } }
+        ////////////
+        // Assets //
+        ////////////
 
+        //Resources Resources { get { return Resources; } }
         Player player;
         List<Bullet> bullets = new List<Bullet>();
 
-        int difficulty = 10;
+        ////////////////////
+        // Configurations //
+        ////////////////////
+
+        int difficulty = 25;
+        int homingRatio = 10;
         bool difficultyRising = false;
         bool GodMode = true;
 
-        void SpawnBullet(bool isFirstTime)
+        //////////////////////
+        // Respawn Settings //
+        //////////////////////
+
+        void SpawnBullet(string bulletType, bool isFirstTime)
         {
-            bullets.Add(Bullet.Spawn(panel1, player, isFirstTime));
+            switch (bulletType)
+            {
+                case "HomingBullet":
+                    bullets.Add(HomingBullet.Spawn(panel1, player, isFirstTime));
+                    break;
+                case "Bullet":
+                    bullets.Add(Bullet.Spawn(panel1, player, isFirstTime));
+                    break;
+                default:
+                    break;
+            }
+            Bullet.countSpawn++;
             panel1.Controls.Add(bullets[bullets.Count - 1]);
-            //Console.WriteLine($"{bullets[bullets.Count - 1].X}\t{bullets[bullets.Count - 1].Y}\t");
         }
-        void SpawnBullet()
+        void InitBullets()
         {
-            SpawnBullet(false);
+            InitBullets(true, false);
         }
-        void SpawnBullet(string bulletType)
+        void InitBullets(bool isSpecialAllowed, bool isFirstTime)
         {
-            // bulletType should be "homing" here.
-            // another bulletType can be added.
-            bullets.Add(HomingBullet.Spawn(panel1, player));
-            panel1.Controls.Add(bullets[bullets.Count - 1]);
+            while (bullets.Count < difficulty)
+            {
+                if (isSpecialAllowed && (Bullet.countSpawn % homingRatio == 0))
+                {
+                    SpawnBullet("HomingBullet", isFirstTime);
+                    continue;
+                }
+
+                SpawnBullet("Bullet", isFirstTime);
+            }
         }
+
+        //////////////////////
+        // Main Constructor //
+        //////////////////////
+
         public SpaceScreen()
         {
             InitializeComponent();
 
             player = new Player(Width / 2, Height / 2, 1.5);
             Bullet.MaxSpeed = 2.5;
-            for (int i = 0; i < difficulty; i++)
-            {
-                SpawnBullet(true);
-            }
+
+            InitBullets(false, true);
             panel1.Controls.Add(player);
             infoTimer.Start();
             moveTimer.Start();
-            spawnTimer.Start();
+            difficultyTimer.Start();
         }
         DateTime startTime;
         DateTime survivedTime;
+
+        //////////////////////////
+        // Timer event Settings //
+        //////////////////////////
+
         private void infoTimer_tick(object sender, EventArgs e)
         {
             InfoBoard.Text =
@@ -69,7 +105,7 @@ namespace dodge_practice
                 if (bullets[i].isHitBy(player) && !GodMode)
                 {
                     moveTimer.Stop();
-                    spawnTimer.Stop();
+                    difficultyTimer.Stop();
                     MessageBox.Show("Hit!");
                 }
 
@@ -80,32 +116,24 @@ namespace dodge_practice
                     bullets.RemoveAt(i);
                 }
 
+                InitBullets();
             }
         }
-
-        private void spawnTimer_tick(object sender, EventArgs e)
+        private void difficultyTimer_tick(object sender, EventArgs e)
         {
             Random random = new Random(DateTime.Now.Millisecond);
-            while (bullets.Count < difficulty)
-            {
-                if (bullets.Count % 2 == 0)
-                {
-                    SpawnBullet("homing");
-                    continue;
-                }
 
-                SpawnBullet();
-            }
-
-
-            if ((spawnTimer.Interval > 1) && (difficulty < Bullet.countDodge) && difficultyRising)
+            if ((difficultyTimer.Interval > 1) && (difficulty < Bullet.countDodge) && difficultyRising)
             {
                 difficulty++;
-                spawnTimer.Interval--;
+                difficultyTimer.Interval--;
             }
 
         }
 
+        /////////////////////////////
+        // Keyboard event Settings //
+        /////////////////////////////
 
         private void WASD_Checker(object sender, PreviewKeyDownEventArgs e)
         {

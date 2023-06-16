@@ -9,47 +9,98 @@ using System.Threading.Tasks;
 
 namespace dodge_practice
 {
-    // GameObject :: PictureBox that can possibly move during the session
+    
+    public class GameAsset
+    {
+        private static Dictionary<string, int> AssetIndex = new Dictionary<string, int>{
+            { "dodge_practice.Player", 0 },
+            { "dodge_practice.Bullet", 1 },
+            { "dodge_practice.HomingBullet", 2 },
+
+            { "dodge_practice.GameObject", -1 },
+            };
+        private static Size[] SizeByKey = { 
+            new Size(10, 10), 
+            new Size(4, 4), 
+            new Size(4, 4) 
+        };
+        private static Image[] ImageByKey = { 
+            Resources.player, 
+            Resources.bullet, 
+            Resources.homingBullet 
+        };
+
+        public static Size GetSize(string key) { return SizeByKey[AssetIndex[key]]; }
+        public static Image GetImage(string key) {  return ImageByKey[AssetIndex[key]]; }
+    }
     public class GameObject : PictureBox
     {
-        public static Size defaultSize = new Size(1, 1);
-        public static Image? defaultImage;
-
+        //////////////////////////////
+        // Cordinate, Velocity Info //
+        //////////////////////////////
+        
         public double X { get; set; }
         public double Y { get; set; }
+        public double speedTotal = 0;
         public double speedX = 0;
         public double speedY = 0;
+
+        /////////////////
+        // Constructor //
+        /////////////////
+        
         public GameObject(int X, int Y)
         {
+            this.SetAsset(this.GetType().ToString());
             this.SetLocation(X, Y);
         }
         public GameObject(double X, double Y)
         {
+            this.SetAsset(this.GetType().ToString());
             this.SetLocation(X, Y);
         }
+        public GameObject(double X, double Y, double speedX, double speedY) : this(X, Y)
+        {
+            this.SetAsset(this.GetType().ToString());
+            this.SetLocation(X, Y);
+            this.SetSpeed(speedX, speedY);
+        }
 
-        // Calculate realnumber cordinate and return into int cordinate //
-        public void SetLocation(double X, double Y)
+        /////////////////////////
+        // Initializer Methods //
+        // DONT OVERRIDE       //
+        /////////////////////////
+
+        protected void SetLocation(double X, double Y)
         {
             this.Location = new Point((int)X, (int)Y);
             this.X = X; this.Y = Y;
         }
-        public void SetAsset()
+        protected void SetAsset(string GameObjectType) 
         {
-            this.Size = Bullet.defaultSize;
-            this.Image = Bullet.defaultImage;
+            this.Size = GameAsset.GetSize(GameObjectType);
+            this.Image = GameAsset.GetImage(GameObjectType);
         }
-        public void SetSpeed(double speedX, double speedY)
+        protected void SetSpeed(double speedX, double speedY)
         {
             this.speedX = speedX;
             this.speedY = speedY;
         }
+
+        ///////////////////////
+        // Relocating Method //
+        ///////////////////////
+        
         public virtual void Fly()
         {
             X += this.speedX; Y += this.speedY;
             this.SetLocation(X, Y);
         }
 
+        ///////////////////
+        // Status Method //
+        ///////////////////
+        
         public bool isHitBy(GameObject another)
         {
             if (
@@ -74,15 +125,22 @@ namespace dodge_practice
     }
     public class Player : GameObject
     {
+        /////////////////
+        // Player Info //
+        /////////////////
+        
         public int speedDefault = 2;
         public double speedPrecise = 1.5;
         public bool isAlive = true;
 
+        ///////////////////////////////
+        // Constructor & Init Method //
+        ///////////////////////////////
+        
         public Player(int X, int Y) : base(X, Y)
         {
             ReadyPlayerOne();
         }
-
         public Player(int X, int Y, double? speed)  : base(X, Y)
         {
             ReadyPlayerOne();
@@ -98,28 +156,27 @@ namespace dodge_practice
     }
     public class Bullet : GameObject
     {
-        public static new Size defaultSize = new Size(4, 4);
-        public static new Image defaultImage = Resources.bullet;
+        ///////////////////////////////////////////
+        // Bullet Unique Info ( and Statistics ) //
+        ///////////////////////////////////////////
 
         public static int countDodge = 0;
-        public static double MaxSpeed = 3; 
+        public static int countSpawn = 0;
+        public static double MaxSpeed = 3;
 
-        public Bullet(int X, int Y, double speedX, double speedY) : base(X, Y)
-        {
-            this.SetAsset();
-            this.SetSpeed(speedX, speedY);
-        }
-        public Bullet(int X, int Y, double speedX, double speedY, bool isForHeir) : base(X, Y)
-        {
-            this.SetSpeed(speedX, speedY);
-        }
+        ///////////////////////////////////////////
+        // Constructor & Randomized Init Methods //
+        ///////////////////////////////////////////
 
-        //      On Construct        //
+        protected Bullet(int X, int Y, double speedX, double speedY) : base(X, Y, speedX, speedY) { }
         protected static void RandomSpeed(Random random, double minSpeedRatio, out double speedX, out double speedY)
         {
-            double totalspeed = (minSpeedRatio + (1 - minSpeedRatio) * random.NextDouble()) * Bullet.MaxSpeed;
-            speedX = random.NextDouble() * totalspeed;
-            speedY = Math.Sqrt(Math.Pow(totalspeed, 2) - Math.Pow(speedX, 2));
+            double speedTotal = Math.Pow(
+                (minSpeedRatio + (1 - minSpeedRatio) * random.NextDouble()) * Bullet.MaxSpeed,
+                2);
+            double XYratio = random.NextDouble();
+            speedX = Math.Sqrt(XYratio * speedTotal);
+            speedY = Math.Sqrt((1-XYratio) * speedTotal);
         }
         protected static void RandomLocation(Random random, Panel stage, out int X, out int Y)
         {
@@ -128,97 +185,91 @@ namespace dodge_practice
             X = (int)(stage.Width * WidthRatio);
             Y = (int)(stage.Height * HeightRatio);
         }
-        
-        protected static void RandomizedSpawn(Panel stage, GameObject target, bool isFirstTime, out int _X, out int _Y, out double _speedX, out double _speedY)
+        protected static void RandomInit(Panel stage, GameObject target, bool isFirstTime, out int X, out int Y, out double speedX, out double speedY)
         {
             Random random = new Random();
             int deciderDirection = random.Next(0, 4);
-            double speedX, speedY;
-            RandomSpeed(random, 0.5, out speedX, out speedY);
+            double lspeedX, lspeedY;
+            int lX, lY;
 
-            int spawnX = 0, spawnY = 0;
-            RandomLocation(random, stage, out spawnX, out spawnY);
+            RandomSpeed(random, 0.6, out lspeedX, out lspeedY);           
+            RandomLocation(random, stage, out lX, out lY);
 
             switch (deciderDirection)
             {
                 case 0: // top
-                    spawnY = 0;
-                    if (isFirstTime) spawnY += (stage.Size.Height / 10);
+                    lY = 0;
+                    if (isFirstTime) lY += (stage.Size.Height / 10);
                     break;
                 case 1: // left
-                    spawnX = 0;
-                    if (isFirstTime) spawnX += (stage.Size.Width / 10);
+                    lX = 0;
+                    if (isFirstTime) lX += (stage.Size.Width / 10);
                     break;
                 case 2: // bottom
-                    spawnY = stage.Size.Height;
-                    if (isFirstTime) spawnY -= (stage.Size.Height / 10);
+                    lY = stage.Size.Height;
+                    if (isFirstTime) lY -= (stage.Size.Height / 10);
                     break;
                 case 3: // right
-                    spawnX = stage.Size.Width;
-                    if (isFirstTime) spawnX -= (stage.Size.Width / 10);
+                    lX = stage.Size.Width;
+                    if (isFirstTime) lX -= (stage.Size.Width / 10);
                     break;
                 default: break;
             }
 
-            if (target.Location.X < spawnX) { speedX *= -1; }
-            if (target.Location.Y < spawnY) { speedY *= -1; }
+            if (target.Location.X < lX) { lspeedX *= -1; }
+            if (target.Location.Y < lY) { lspeedY *= -1; }
 
-            _X = spawnX; _Y = spawnY;
-            _speedX = speedX; _speedY = speedY;
+            X = lX; Y = lY;
+            speedX = lspeedX; speedY = lspeedY;            
         }
+
+        /////////////////////////////
+        // Public Construct Method //
+        /////////////////////////////
+        
         public static Bullet Spawn(Panel stage, GameObject target)
         {
             return Spawn(stage, target, false);
         }
-        /// <summary>
-        /// spawning NEW Bullet on the stage fly toward "target" in randomized speed.
-        /// 
-        /// this Spawn method does not actually "aim" at the target, 
-        /// but just get random speed and direction and then adjust the direction if it's not to the target at all.
-        /// 
-        /// </summary>
-        /// <param name="stage"></param>
-        /// where the Bullet belongs to.
-        /// 
-        /// <param name="target"></param>
-        /// The Bullets will fly toward target's location.
-        /// 
-        /// <param name="isFirstTime"></param>
-        /// when It's the first time spawning(in the beginning of the game), the bullets will spawn closer to the center.
-        /// otherwise, they'll spawn on the border.
-        /// <returns></returns>
         public static Bullet Spawn(Panel stage, GameObject target, bool isFirstTime)
         {
             int spawnX, spawnY;
             double speedX, speedY;
 
-            RandomizedSpawn(stage, target, isFirstTime, out spawnX, out spawnY, out speedX, out speedY);
+            RandomInit(stage, target, isFirstTime, out spawnX, out spawnY, out speedX, out speedY);
 
             return new Bullet(spawnX, spawnY, speedX, speedY);
         }
 
     }
-    
     public class HomingBullet : Bullet
     {
-        public static new Image defaultImage = Resources.homingBullet;
-        public static double defaultAcceleration = 0.005;
-
-        public double acceleration;
-        GameObject target;
+        ///////////////////////
+        // HomingBullet Info //
+        ///////////////////////
         
-        HomingBullet(int X, int Y,  double speedX, double speedY, GameObject target) : base(X, Y, speedX, speedY, true)
+        public static double defaultAcceleration = 0.005;
+        public double acceleration = 0;
+        GameObject target;
+
+        /////////////////
+        // Constructor //
+        /////////////////
+        protected HomingBullet(int X, int Y,  double speedX, double speedY, GameObject target) : base(X, Y, speedX, speedY)
         {
-            this.SetAsset();
-            this.acceleration = defaultAcceleration;
+            this.acceleration = defaultAcceleration; 
             this.target = target;
         }
-        HomingBullet(int X, int Y,  double speedX, double speedY, double acceleration, GameObject target) : base(X, Y, speedX, speedY)
+        protected HomingBullet(int X, int Y,  double speedX, double speedY, double acceleration, GameObject target) : base(X, Y, speedX, speedY)
         {
             this.acceleration = acceleration;
             this.target = target;
         }
 
+        ////////////////////////////////
+        // Overrided Fly() Method     //
+        // Added Homing Function Here //
+        ////////////////////////////////
         public override void Fly()
         {
             //bool needTurnX = false;
@@ -253,44 +304,47 @@ namespace dodge_practice
             else { 
                 speedY += acceleration; }
 
-            double velocity = (Math.Pow(speedX,2) + Math.Pow(speedY,2));
-            if (velocity > Math.Pow(MaxSpeed,2)) 
+            speedTotal = (Math.Pow(speedX,2) + Math.Pow(speedY,2));
+            if (speedTotal > Math.Pow(MaxSpeed,2)) 
             {
-                speedX = speedX * (MaxSpeed / velocity);
-                speedY = speedY * (MaxSpeed / velocity);
+                speedX = speedX * Math.Sqrt((MaxSpeed / speedTotal));
+                speedY = speedY * Math.Sqrt((MaxSpeed / speedTotal));
             }
 
             this.X += speedX; this.Y += speedY;
             this.SetLocation(X, Y);
         }
 
-        public static new HomingBullet Spawn(Panel stage, GameObject target)
+        /////////////////////////////
+        // Public Construct Method //
+        /////////////////////////////
+        public static new HomingBullet Spawn(Panel stage, GameObject target, bool isFirstTime)
         {
             int spawnX, spawnY;
             double speedX, speedY; 
-            RandomizedSpawn(stage, target, false, out spawnX, out spawnY, out speedX, out speedY);
+            RandomInit(stage, target, isFirstTime, out spawnX, out spawnY, out speedX, out speedY);
             return new HomingBullet(spawnX, spawnY, speedX, speedY, target);
         }
-
 
     }
     
 
-    // To do list
+    /* To do list
 
     // 
     //
     // Consider if it's more efficient separate GameObject.Asset as a struct, or a ConFiguration class.
     //
-    // Consider to make a struct holding GameObject's Cordinate related varibles.
-    //   ==> named like Physics?
+    /// Done // Consider to make a struct holding GameObject's Cordinate related varibles.
+    /// By Comments Separation
     //
     // Make Replay Option 
     // 
-    // Organize codes looks more consistent.
+    /// Done // Organize codes looks more consistent.
     //
     // Separate the Whole Game as a class Dodge. So that it can be run on other Windows Forms.
     // Consider attatch other games into ONE platform. 
     //
     // Add 2 Players Mode
+    */
 }

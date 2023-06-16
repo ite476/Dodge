@@ -31,7 +31,7 @@
             components = new System.ComponentModel.Container();
             moveTimer = new System.Windows.Forms.Timer(components);
             infoTimer = new System.Windows.Forms.Timer(components);
-            spawnTimer = new System.Windows.Forms.Timer(components);
+            difficultyTimer = new System.Windows.Forms.Timer(components);
             panel1 = new Panel();
             label3 = new Label();
             ScoreBoard = new Label();
@@ -49,10 +49,10 @@
             infoTimer.Interval = 10;
             infoTimer.Tick += infoTimer_tick;
             // 
-            // spawnTimer
+            // difficultyTimer
             // 
-            spawnTimer.Interval = 1000;
-            spawnTimer.Tick += spawnTimer_tick;
+            difficultyTimer.Interval = 1000;
+            difficultyTimer.Tick += difficultyTimer_tick;
             // 
             // panel1
             // 
@@ -121,7 +121,7 @@
         #endregion
         private System.Windows.Forms.Timer moveTimer;
         private System.Windows.Forms.Timer infoTimer;
-        private System.Windows.Forms.Timer spawnTimer;
+        private System.Windows.Forms.Timer difficultyTimer;
         private Panel panel1;
         private Label InfoBoard;
         private PictureBox pictureBox1;
